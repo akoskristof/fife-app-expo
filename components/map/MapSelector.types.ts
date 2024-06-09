@@ -1,0 +1,14 @@
+import { StyleProp, ViewStyle } from "react-native";
+import { LatLng } from "react-native-maps";
+
+export interface MapCircleType {
+    position: LatLng,
+    radius: number
+}
+
+export interface MapSelectorProps {
+    style?: StyleProp<ViewStyle>;
+    searchStyle?: StyleProp<ViewStyle>;
+    data?: MapCircleType;
+    setData?: React.Dispatch<React.SetStateAction<MapCircleType|undefined>>;
+}
