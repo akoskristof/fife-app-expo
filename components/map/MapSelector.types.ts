@@ -8,7 +8,7 @@ export interface MapCircleType {
 
 export interface MapSelectorProps {
     style?: StyleProp<ViewStyle>;
-    searchStyle?: StyleProp<ViewStyle>;
+    searchEnabled: boolean;
     data?: MapCircleType;
     setData?: React.Dispatch<React.SetStateAction<MapCircleType|undefined>>;
 }

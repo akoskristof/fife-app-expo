@@ -4,17 +4,13 @@ const circleSize = 200;
 
 const styles = StyleSheet.create({
     search: {
-        borderRadius: 20,
-        margin: 10,
         color: '#000',
         borderColor: '#666',
         backgroundColor: '#FFF',
         height: 45,
-        paddingHorizontal: 10,
+        paddingHorizontal: 20,
         fontSize: 18,
-        shadowOffset: {width:4,height:4},
-        shadowOpacity: 1,
-        shadowColor: 'black',
+        zIndex:2,
     },
     circleFixed: {
         left: '50%',
@@ -24,8 +20,15 @@ const styles = StyleSheet.create({
         zIndex:10,
         position: 'absolute',
         top: '50%',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        alignItems:'center'
         
+      },
+      circleText:{
+        backgroundColor:'rgba(253, 207, 153,1)',
+        padding:8,
+        borderRadius:8,
+        marginTop:-3
       },
       marker: {
         height: 48,

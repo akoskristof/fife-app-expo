@@ -2,8 +2,10 @@ import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="index" />
+    <Stack screenOptions={{
+    }}>
+      <Stack.Screen name="index" options={{title:''}}/>
+      <Stack.Screen name="test" options={{title:'asd'}}/>
     </Stack>
   );
 }

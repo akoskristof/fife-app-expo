@@ -1,27 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, View, TextInput, StyleProp, ViewStyle, useWindowDimensions } from 'react-native';
-import MapView, { Circle, Details, LatLng, Marker, Region } from 'react-native-maps';
-import styles from './style';
+import { Text, TextInput, View } from 'react-native';
+import { MapView, Details, Region } from './mapView';
 import { MapCircleType, MapSelectorProps } from './MapSelector.types';
+import styles from './style';
 
-const MapSelector = ({style,searchStyle,data,setData}:MapSelectorProps) => {
+const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
     const [search, setSearch] = useState<string>('');
     const [mapHeight, setMapHeight] = useState<number>(0);
     const circleSize = mapHeight/3;
-    const mapRef = useRef(null);
     const [circle, setCircle] = useState<MapCircleType>(
         data||{
             position:{latitude:47.4979,longitude:19.0402},
             radius:300,
         });
     const [circleRadiusText, setCircleRadiusText] = useState('0 km');
+    const mapRef = useRef(null);
 
     useEffect(() => {
         if (setData)
         setData(circle);
     }, [circle]);
 
-    const onRegionChange: ((region: Region, details: Details) => void) | undefined = (e)=>{
+    const onRegionChange: ((region: Region, details: Details) => void) | undefined = async (e)=>{
         if (!mapHeight) return;
         const km = e.latitudeDelta*111.32*circleSize/mapHeight;
 
@@ -39,40 +39,55 @@ const MapSelector = ({style,searchStyle,data,setData}:MapSelectorProps) => {
         })
     }
 
-
-
     return (
     <View style={[{flex:1},style]} >
-        <View style={{ position: 'absolute', top: 10, width: '100%' }}>
+        {searchEnabled && <View style={{ width: '100%' }}>
             <TextInput
                 style={styles.search}
                 value={search}
                 onChangeText={setSearch}
-                placeholder={'Search'}
+                placeholder={'Keress a térképen'}
                 placeholderTextColor={'#666'}
             />
-        </View>
-        <MapView style={{width:'100%',height:'100%'}}
-            onLayout={(e)=>{setMapHeight(e.nativeEvent.layout.height)}}
-            initialRegion={{
-                latitude: 47.4979,
-                longitude: 19.0402,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-            }}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            onRegionChange={onRegionChange}>
+        </View>}
+        <View style={{width:'100%',height:'100%'}}
+            onLayout={(e)=>{setMapHeight(e.nativeEvent.layout.height)}}>
+            <MapView 
+                options={{
+                    mapTypeControl: false,
+                    fullscreenControl:false,
+                    streetViewControl:false
+                }}
+                style={{width:'100%',height:'100%'}}
+                ref={mapRef}
+                initialCamera={{
+                    altitude: 10,
+                    center: {
+                        latitude: 47.4979,
+                        longitude: 19.0402,
+                    },
+                    heading: 0,
+                    pitch: 0,
+                    zoom: 12,
+                }}
+                provider="google"
+                googleMapsApiKey={"AIzaSyDqjygaNZxE3FU0aJbQ9v6EOzOdV2waxSo"}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                toolbarEnabled={false}
+                onRegionChangeComplete={onRegionChange}>
             </MapView>
-            <View style={[styles.circleFixed,{    
-                width:circleSize,
-                height:circleSize,
-                marginLeft:-circleSize/2,
-                marginTop:-circleSize/2,
-                borderRadius:circleSize
-            }]}>
-                <Text>Távolság: {circleRadiusText} km</Text>
-            </View>
+        </View>
+        
+        {!!circleSize && <View style={[styles.circleFixed,{    
+            width:circleSize,
+            height:circleSize,
+            marginLeft:-circleSize/2,
+            marginTop:-circleSize/2,
+            borderRadius:circleSize
+        }]}>
+            <Text style={styles.circleText}>Átmérő: {circleRadiusText}</Text>
+        </View>}
     </View>)
     
 }
