@@ -3,6 +3,7 @@ import { Text, TextInput, View } from 'react-native';
 import { MapView, Details, Region } from './mapView';
 import { MapCircleType, MapSelectorProps } from './MapSelector.types';
 import styles from './style';
+import axios from 'axios';
 
 const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
     const [search, setSearch] = useState<string>('');
@@ -14,12 +15,23 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
             radius:300,
         });
     const [circleRadiusText, setCircleRadiusText] = useState('0 km');
-    const mapRef = useRef(null);
 
     useEffect(() => {
         if (setData)
         setData(circle);
     }, [circle]);
+
+    useEffect(() => {
+        axios.get(`
+            https://corsproxy.io/
+            ?${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?
+            input=${search}&
+            key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`)}`)
+        .then(res=>{
+            console.log(res.data);
+            
+        })
+    }, [search]);
 
     const onRegionChange: ((region: Region, details: Details) => void) | undefined = async (e)=>{
         if (!mapHeight) return;
@@ -38,10 +50,10 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
             radius:km
         })
     }
-
     return (
     <View style={[{flex:1},style]} >
         {searchEnabled && <View style={{ width: '100%' }}>
+
             <TextInput
                 style={styles.search}
                 value={search}
@@ -59,7 +71,6 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                     streetViewControl:false
                 }}
                 style={{width:'100%',height:'100%'}}
-                ref={mapRef}
                 initialCamera={{
                     altitude: 10,
                     center: {
@@ -71,7 +82,7 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                     zoom: 12,
                 }}
                 provider="google"
-                googleMapsApiKey={"AIzaSyDqjygaNZxE3FU0aJbQ9v6EOzOdV2waxSo"}
+                googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
                 pitchEnabled={false}
                 rotateEnabled={false}
                 toolbarEnabled={false}
