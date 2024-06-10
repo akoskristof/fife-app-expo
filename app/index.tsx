@@ -1,6 +1,9 @@
 import { Text, View } from "react-native";
+import axios from "axios";
 
 export default function Index() {
+
+  axios.defaults.baseURL = 'http://localhost:8888/.netlfiy/functions/index';
   return (
     <View
       style={{
