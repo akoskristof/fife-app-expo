@@ -3,7 +3,6 @@ import { Text, TextInput, View } from 'react-native';
 import { MapView, Details, Region } from './mapView';
 import { MapCircleType, MapSelectorProps } from './MapSelector.types';
 import styles from './style';
-import axios from 'axios';
 
 const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
     const [search, setSearch] = useState<string>('');
@@ -20,18 +19,6 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
         if (setData)
         setData(circle);
     }, [circle]);
-
-    useEffect(() => {
-        axios.get(`
-            https://corsproxy.io/
-            ?${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?
-            input=${search}&
-            key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`)}`)
-        .then(res=>{
-            console.log(res.data);
-            
-        })
-    }, [search]);
 
     const onRegionChange: ((region: Region, details: Details) => void) | undefined = async (e)=>{
         if (!mapHeight) return;
