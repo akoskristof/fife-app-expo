@@ -11,7 +11,7 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: 'A kutyafáját!' }} />
       <ThemedView style={styles.container}>
         <ThemedText type="title">Eltévedtünk a bitrengetegben.</ThemedText>
-        <Link href="/" style={styles.link}>
+        <Link href="/" style={styles.link} asChild>
           <Button mode='contained-tonal'>Vissza a főképernyőre</Button>
         </Link>
       </ThemedView>
@@ -28,6 +28,5 @@ const styles = StyleSheet.create({
   },
   link: {
     marginTop: 15,
-    paddingVertical: 15,
   },
 });

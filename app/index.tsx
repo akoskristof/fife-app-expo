@@ -16,7 +16,7 @@ export default function Index() {
         <Button mode='contained'>Térkép kereső</Button>
       </Link>
       <Link href='/notfound' asChild>
-        <Button >Eltévedek</Button>
+        <Button>Eltévedek</Button>
       </Link>
 
     </View>

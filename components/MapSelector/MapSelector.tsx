@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { MapView, Details, Region, Marker, Camera } from './mapView';
+import { MapView, Details, Region, Marker, Camera } from '../mapView/mapView';
 import { MapCircleType, MapSelectorProps } from './MapSelector.types';
-import styles from './style';
+import styles from '../mapView/style';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import MyLocationIcon from '../../assets/images/myLocationIcon'
 import { Button, FAB, IconButton, SegmentedButtons } from 'react-native-paper';
+import { useNavigation } from 'expo-router';
 
 
 const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
+    const navigation  = useNavigation()
     const [search, setSearch] = useState<string>('');
     const [mapHeight, setMapHeight] = useState<number>(0);
     const circleSize = mapHeight/3;
@@ -17,6 +19,7 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
         data||{
             position:{latitude:47.4979,longitude:19.0402},
             radius:300,
+            radiusDisplay: null
         });
     const [circleRadiusText, setCircleRadiusText] = useState('0 km');
     const [myLocation, setMyLocation] = useState<LocationObject|null>(null);
@@ -39,18 +42,13 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
       })();
     }, []);
 
-    useEffect(() => {
-        if (setData)
-        setData(circle);
-    }, [circle]);
-
     const onRegionChange: ((region: Region, details: Details) => void) | undefined = async (e)=>{
         if (!mapHeight) return;
         const km = e.latitudeDelta*111.32*circleSize/mapHeight;
 
-        setCircleRadiusText(Math.round(km)+' km')
+        let text = (Math.round(km)+' km')
         if (km < 2) {
-            setCircleRadiusText(Math.round(km*1000)+' m')
+            text = (Math.round(km*1000)+' m')
         }
         
         setCircle({
@@ -58,8 +56,10 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                 latitude:e.latitude,
                 longitude:e.longitude
             },
-            radius:km
+            radius:km,
+            radiusDisplay: text
         })
+        setCircleRadiusText(text)
     }
 
     const panToMyLocation = () => {
@@ -83,7 +83,8 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
     }
 
     const onSubmit = () => {
-        
+        if (setData)
+        setData(circle);
     }
     
     return (
@@ -112,8 +113,8 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                 initialCamera={{
                     altitude: 10,
                     center: {
-                        latitude: 47.4979,
-                        longitude: 19.0402,
+                        latitude: circle.position.latitude,
+                        longitude: circle.position.longitude,
                     },
                     heading: 0,
                     pitch: 0,
@@ -124,12 +125,13 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                 pitchEnabled={false}
                 rotateEnabled={false}
                 toolbarEnabled={false}
-                onRegionChangeComplete={onRegionChange}>
-                    {myLocation&&<Marker
-                    centerOffset={{x:10,y:10}}
-                    coordinate={myLocation?.coords} style={{justifyContent:"center", alignItems:"center"}}>
-                        <MyLocationIcon style={{width:20,height:20}}/>
-                    </Marker>}
+                onRegionChangeComplete={onRegionChange}
+            >
+                { myLocation && <Marker
+                centerOffset={{x:10,y:10}}
+                coordinate={myLocation?.coords} style={{justifyContent:"center", alignItems:"center"}}>
+                    <MyLocationIcon style={{width:20,height:20}}/>
+                </Marker>}
             </MapView>
         </View>
         

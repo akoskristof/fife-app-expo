@@ -3,7 +3,8 @@ import { LatLng } from "react-native-maps";
 
 export interface MapCircleType {
     position: LatLng,
-    radius: number
+    radius: number,
+    radiusDisplay: string|null,
 }
 
 export interface MapSelectorProps {
