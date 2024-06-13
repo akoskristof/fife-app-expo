@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
-import { Button, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Button } from "react-native-paper";
 
 export default function Index() {
   return (
@@ -8,11 +9,16 @@ export default function Index() {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        gap:24
       }}
     >
-      <Link href='test' asChild>
-      <Button title="Térkép kereső"/>
+      <Link href='/mapTest' asChild>
+        <Button mode='contained'>Térkép kereső</Button>
       </Link>
+      <Link href='/notfound' asChild>
+        <Button >Eltévedek</Button>
+      </Link>
+
     </View>
   );
 }

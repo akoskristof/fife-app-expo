@@ -17,7 +17,7 @@ export default function Index() {
     style={{flex:1}}
     >
       <MapSelector data={circle} setData={setCircle} searchEnabled/>
-      <Text>pozicio:{circle?.position.latitude},{circle?.position.longitude}{'\n'} tav: {circle?.radius}</Text>
+      {false&&<Text>pozicio:{circle?.position.latitude},{circle?.position.longitude}{'\n'} tav: {circle?.radius}</Text>}
     </View>
   );
 }

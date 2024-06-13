@@ -1,8 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { MapView, Details, Region } from './mapView';
+import { MapView, Details, Region, Marker, Camera } from './mapView';
 import { MapCircleType, MapSelectorProps } from './MapSelector.types';
 import styles from './style';
+import * as Location from 'expo-location';
+import { LocationObject } from 'expo-location';
+import MyLocationIcon from '../../assets/images/myLocationIcon'
+import { Button, FAB, IconButton, SegmentedButtons } from 'react-native-paper';
+
 
 const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
     const [search, setSearch] = useState<string>('');
@@ -14,6 +19,25 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
             radius:300,
         });
     const [circleRadiusText, setCircleRadiusText] = useState('0 km');
+    const [myLocation, setMyLocation] = useState<LocationObject|null>(null);
+    const [errorMsg, setErrorMsg] = useState<string|null>();
+    const mapRef = useRef<any>(null);
+
+    useEffect(() => {
+      (async () => {
+        
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+          return;
+        }
+  
+        let location = await Location.getCurrentPositionAsync({});
+        console.log(location);
+        
+        setMyLocation(location);
+      })();
+    }, []);
 
     useEffect(() => {
         if (setData)
@@ -37,10 +61,34 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
             radius:km
         })
     }
+
+    const panToMyLocation = () => {
+        if (!mapRef.current || !myLocation) return;
+        const region = {
+            latitude: myLocation.coords.latitude,
+            longitude: myLocation.coords.longitude,
+            latitudeDelta: 0.0043,
+            longitudeDelta: 0.0034
+          };
+        mapRef.current.animateToRegion(region, 1000);
+    }
+
+    const zoom =  (zoomTo:number) => {
+        if (!mapRef.current) return;
+        mapRef?.current?.getCamera().then((cam: Camera) => {
+            if (cam.zoom)
+            cam.zoom += zoomTo;
+            mapRef?.current?.animateCamera(cam);
+        });
+    }
+
+    const onSubmit = () => {
+        
+    }
+    
     return (
     <View style={[{flex:1},style]} >
-        {searchEnabled && <View style={{ width: '100%' }}>
-
+        {false && <View style={{ width: '100%' }}>
             <TextInput
                 style={styles.search}
                 value={search}
@@ -49,13 +97,16 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                 placeholderTextColor={'#666'}
             />
         </View>}
+        <View style={{width:'100%',height:'100%'}}>
         <View style={{width:'100%',height:'100%'}}
             onLayout={(e)=>{setMapHeight(e.nativeEvent.layout.height)}}>
             <MapView 
+                ref={mapRef}
                 options={{
                     mapTypeControl: false,
                     fullscreenControl:false,
-                    streetViewControl:false
+                    streetViewControl:false,
+                    zoomControl:false
                 }}
                 style={{width:'100%',height:'100%'}}
                 initialCamera={{
@@ -74,9 +125,30 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
                 rotateEnabled={false}
                 toolbarEnabled={false}
                 onRegionChangeComplete={onRegionChange}>
+                    {myLocation&&<Marker
+                    centerOffset={{x:10,y:10}}
+                    coordinate={myLocation?.coords} style={{justifyContent:"center", alignItems:"center"}}>
+                        <MyLocationIcon style={{width:20,height:20}}/>
+                    </Marker>}
             </MapView>
         </View>
         
+        {!!myLocation && <FAB
+            icon="map-marker"
+            style={styles.myLocationButton}
+            onPress={panToMyLocation}
+        />}
+
+        <View style={styles.zoom}>
+            <IconButton icon="plus" style={{borderBottomLeftRadius:0,borderBottomRightRadius:0,margin:0}} onPress={()=>zoom(1)} mode='contained-tonal'/>
+            <IconButton icon="minus" style={{borderTopLeftRadius:0,borderTopRightRadius:0,margin:0}} onPress={()=>zoom(-1)} mode='contained-tonal'/>
+        </View>
+        <View style={{width:'100%',alignItems:'center'}}>
+            <Button mode='contained' style={styles.submit} onPress={onSubmit}>
+                <Text>Helyzet mentése</Text>
+            </Button>
+        </View>
+            
         {!!circleSize && <View style={[styles.circleFixed,{    
             width:circleSize,
             height:circleSize,
@@ -86,6 +158,8 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
         }]}>
             <Text style={styles.circleText}>Átmérő: {circleRadiusText}</Text>
         </View>}
+        </View>
+
     </View>)
     
 }

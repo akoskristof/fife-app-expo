@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 
-const circleSize = 200;
 
 const styles = StyleSheet.create({
     search: {
@@ -24,6 +23,19 @@ const styles = StyleSheet.create({
         alignItems:'center'
         
       },
+      myLocationButton :{
+        position:'absolute',
+        right:10,
+        top:10,
+        zIndex:10
+      },
+      zoom:{
+        position:'absolute',
+        right:10,
+        bottom:20,
+        zIndex:10
+
+      },
       circleText:{
         backgroundColor:'rgba(253, 207, 153,1)',
         padding:8,
@@ -33,6 +45,11 @@ const styles = StyleSheet.create({
       marker: {
         height: 48,
         width: 48
+      },
+      submit: {
+        position:'absolute',
+        bottom:20,
+        zIndex:10
       },
 })
 
