@@ -23,6 +23,8 @@ import {
   clearComments,
   editComment,
   deleteComment as deleteCommentSlice,
+  onImageEdit,
+  onCommentEdit,
 } from "@/lib/redux/reducers/commentsReducer";
 import { RootState } from "@/lib/redux/store";
 import { CommentsState, UserState } from "@/lib/redux/store.type";
@@ -50,6 +52,7 @@ import {
 import FirebaseImage from "../FirebaseImage";
 import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
+import styles from "./style";
 
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
@@ -58,12 +61,11 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
-  const { comments }: CommentsState = useSelector(
+  const { comments, myComment, myImage }: CommentsState = useSelector(
     (state: RootState) => state.comments2,
   );
+  const [fullscreen, setFullscreen] = useState(false);
   const author = name;
-  const [text, setText] = useState("");
-  const [image, setImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
@@ -116,6 +118,9 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const openMenu = () => setShowMenu(true);
   const closeMenu = () => setShowMenu(false);
 
+  const onChangeText = (text: string) => {
+    dispatch(onCommentEdit(text));
+  };
   const pickImage = async () => {
     let result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
@@ -126,37 +131,37 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     });
 
     if (result && !result?.canceled) {
-      setImage(result.assets[0].uri);
+      dispatch(onImageEdit(result.assets[0].uri));
     } else console.log("cancelled");
   };
   const handleSend = async () => {
-    if (author && text && uid && !loading) {
+    if (author && myComment && uid && !loading) {
       setLoading(true);
       const newPostRef = push(dbRef(db, path));
       set(newPostRef, {
         author,
-        text,
+        text: myComment,
         date: Date.now(),
         uid,
       })
         .then(async (res) => {
-          if (image && newPostRef.key) {
+          if (myImage && newPostRef.key) {
             const upload = await uploadImage(uid + "/" + path, newPostRef.key);
             console.log("image upload", upload);
 
-            setImage("");
+            dispatch(onImageEdit(""));
             setLoading(false);
-            setText("");
+            dispatch(onCommentEdit(""));
           } else {
             setLoading(false);
-            setText("");
+            dispatch(onCommentEdit(""));
           }
         })
         .catch((err) => {
           console.log(
             {
               author,
-              text,
+              text: myComment,
               date: Date.now(),
               uid,
             },
@@ -169,7 +174,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     }
   };
   const uploadImage = async (storagePath: string, key: string) => {
-    let localUri = image;
+    let localUri = myImage;
     let fileName = localUri.split("/").pop() || "";
 
     let match = /\.(\w+)$/.exec(fileName);
@@ -225,7 +230,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
               });
           })
           .catch((error) => {
-            console.log("err", image);
+            console.log("err", myImage);
             return error;
           });
       })
@@ -280,19 +285,36 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       });
   };
   const dismissImage = () => {
-    setImage("");
+    dispatch(onImageEdit(""));
+  };
+  const onFullScreen = () => {
+    setFullscreen(!fullscreen);
   };
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flexGrow: 1 }}>
+      <View
+        style={[
+          { flexDirection: "row", zIndex: 10 },
+          fullscreen && styles.fullscreenParent,
+        ]}
+      >
+        <View style={[{ flexGrow: 1 }, fullscreen && styles.fullscreenParent]}>
           <TextInput
-            style={{}}
-            value={text}
-            onChangeText={setText}
+            style={[fullscreen && styles.fullscreen]}
+            contentStyle={[fullscreen && styles.fullscreen]}
+            value={myComment}
+            onChangeText={onChangeText}
+            multiline={fullscreen}
             onSubmitEditing={handleSend}
             disabled={!uid || loading}
+            mode="outlined"
+            right={
+              <TextInput.Icon
+                icon={fullscreen ? "text-box" : "text-box-outline"}
+                onPress={onFullScreen}
+              />
+            }
             placeholder={
               uid
                 ? placeholder
@@ -302,8 +324,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             }
           />
         </View>
-        {image ? (
-          <ImageBackground source={{ uri: image }}>
+        {myImage ? (
+          <ImageBackground source={{ uri: myImage }}>
             <IconButton icon="close" onPress={dismissImage} />
           </ImageBackground>
         ) : (
@@ -312,76 +334,87 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         <Button
           icon="arrow-left-bottom-bold"
           onPress={handleSend}
-          disabled={!uid || !text}
+          disabled={!uid || !myComment}
           style={{ height: "100%", margin: 0 }}
           loading={loading}
         >
           <Text>Küldés</Text>
         </Button>
       </View>
-      <View style={{ flexDirection: "row", padding: 10 }}>
-        <Text style={{ flex: 1 }}>Kommentek:</Text>
-        <Text>Újabbak elöl</Text>
-      </View>
-      {!!comments?.length && (
-        <ScrollView
-          style={{ minHeight: 200 }}
-          contentContainerStyle={{ flexDirection: "column", paddingBottom: 10 }}
-        >
-          {comments.map((comment, ind) => {
-            return (
-              <View
-                key={"comment" + ind}
-                style={[{ flexDirection: "row", maxWidth: "100%", margin: 5 }]}
-              >
-                <View style={{ backgroundColor: "white", flex: 1, padding: 8 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View style={{ flexDirection: "row", flex: 1 }}>
-                      <Pressable
-                        onPress={() => {
-                          if (comment?.uid)
-                            navigation.push({
-                              pathname: "profil",
-                              params: { uid: comment.uid },
-                            });
-                        }}
-                      >
-                        <Text style={{ fontWeight: "bold" }}>
-                          {comment.author}
-                        </Text>
-                      </Pressable>
-                      <Text> {comment.date}</Text>
+      <View style={{ zIndex: 0 }}>
+        <View style={{ flexDirection: "row", padding: 10 }}>
+          <Text style={{ flex: 1 }}>Kommentek:</Text>
+          <Text>Újabbak elöl</Text>
+        </View>
+        {!!comments?.length && (
+          <ScrollView
+            style={{ minHeight: 200 }}
+            contentContainerStyle={{
+              flexDirection: "column",
+              paddingBottom: 10,
+            }}
+          >
+            {comments.map((comment, ind) => {
+              return (
+                <View
+                  key={"comment" + ind}
+                  style={[
+                    { flexDirection: "row", maxWidth: "100%", margin: 5 },
+                  ]}
+                >
+                  <View
+                    style={{ backgroundColor: "white", flex: 1, padding: 8 }}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View style={{ flexDirection: "row", flex: 1 }}>
+                        <Pressable
+                          onPress={() => {
+                            if (comment?.uid)
+                              navigation.push({
+                                pathname: "profil",
+                                params: { uid: comment.uid },
+                              });
+                          }}
+                        >
+                          <Text style={{ fontWeight: "bold" }}>
+                            {comment.author}
+                          </Text>
+                        </Pressable>
+                        <Text> {comment.date}</Text>
+                      </View>
+                      <IconButton
+                        icon="dots-vertical"
+                        onPress={(e) => showCommentMenu(e, comment)}
+                        size={18}
+                        style={{ margin: 0 }}
+                      />
                     </View>
-                    <IconButton
-                      icon="dots-vertical"
-                      onPress={(e) => showCommentMenu(e, comment)}
-                      size={18}
-                      style={{ margin: 0 }}
-                    />
+                    <UrlText text={comment.text} />
                   </View>
-                  <UrlText text={comment.text} />
+                  {comment.fileName && (
+                    <Pressable onPress={() => setSelectedComment(comment)}>
+                      <FirebaseImage
+                        path={
+                          comment.uid +
+                          "/" +
+                          path +
+                          "/" +
+                          comment.key +
+                          "/" +
+                          comment.fileName
+                        }
+                        style={{ width: 100, height: 100 }}
+                      />
+                    </Pressable>
+                  )}
                 </View>
-                {comment.fileName && (
-                  <Pressable onPress={() => setSelectedComment(comment)}>
-                    <FirebaseImage
-                      path={
-                        comment.uid +
-                        "/" +
-                        path +
-                        "/" +
-                        comment.key +
-                        "/" +
-                        comment.fileName
-                      }
-                      style={{ width: 100, height: 100 }}
-                    />
-                  </Pressable>
-                )}
-              </View>
-            );
-          })}
-        </ScrollView>
-      )}
+              );
+            })}
+          </ScrollView>
+        )}
+      </View>
 
       {uid && (
         <Menu visible={showMenu} onDismiss={closeMenu} anchor={menuAnchor}>

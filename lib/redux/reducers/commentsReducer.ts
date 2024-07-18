@@ -4,12 +4,20 @@ import { Comment } from "@/components/comments/comments.types";
 
 const initialState: CommentsState = {
   comments: [],
+  myComment: "",
+  myImage: "",
 };
 
 const commentsReducer = createSlice({
   initialState,
   name: "comments",
   reducers: {
+    onCommentEdit: (state, { payload }: PayloadAction<string>) => {
+      state.myComment = payload;
+    },
+    onImageEdit: (state, { payload }: PayloadAction<string>) => {
+      state.myImage = payload;
+    },
     addComment: (state, action: PayloadAction<Comment>) => {
       state.comments.unshift(action.payload);
     },
@@ -29,7 +37,13 @@ const commentsReducer = createSlice({
   },
 });
 
-export const { addComment, editComment, deleteComment, clearComments } =
-  commentsReducer.actions;
+export const {
+  addComment,
+  editComment,
+  deleteComment,
+  clearComments,
+  onCommentEdit,
+  onImageEdit,
+} = commentsReducer.actions;
 
 export default commentsReducer.reducer;

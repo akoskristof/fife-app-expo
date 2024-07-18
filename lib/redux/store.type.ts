@@ -7,4 +7,6 @@ export interface UserState {
 }
 export interface CommentsState {
   comments: Comment[];
+  myComment: string;
+  myImage: string;
 }
